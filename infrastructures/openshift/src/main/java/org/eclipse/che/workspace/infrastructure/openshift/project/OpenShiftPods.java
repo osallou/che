@@ -332,6 +332,28 @@ public class OpenShiftPods {
     }
   }
 
+  public void delete(String name) throws InfrastructureException {
+    try (OpenShiftClient client = clientFactory.create()) {
+      final PodResource<Pod, DoneablePod> podResource =
+          client.pods().inNamespace(namespace).withName(name);
+      final CompletableFuture<Void> deleteFuture = new CompletableFuture<>();
+      podResource.watch(new DeleteWatcher(deleteFuture));
+      podResource.delete();
+      try {
+        deleteFuture.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new InfrastructureException(
+            "Interrupted while waiting for pod removal. " + e.getMessage());
+      } catch (ExecutionException e) {
+        throw new InfrastructureException(
+            "Error occurred while waiting for pod removing. " + e.getMessage());
+      }
+    } catch (KubernetesClientException e) {
+      throw new InfrastructureException(e.getMessage(), e);
+    }
+  }
+
   /**
    * Deletes all existing pods.
    *
