@@ -11,7 +11,6 @@
 package org.eclipse.che.api.workspace.server;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -19,9 +18,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
@@ -42,6 +41,7 @@ import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
+import org.eclipse.che.api.workspace.server.spi.InternalEnvironmentFactory;
 import org.eclipse.che.api.workspace.server.spi.InternalRuntime;
 import org.eclipse.che.api.workspace.server.spi.RecipeRetriever;
 import org.eclipse.che.api.workspace.server.spi.RuntimeContext;
@@ -71,15 +71,18 @@ public class WorkspaceRuntimesTest {
   @Mock private RecipeRetriever recipeRetriever;
 
   private RuntimeInfrastructure infrastructure;
+  private InternalEnvironmentFactory environmentFactory;
   private WorkspaceRuntimes runtimes;
 
   @BeforeMethod
   public void setUp() throws Exception {
     infrastructure = spy(new TestInfrastructure(installerRegistry, recipeRetriever));
+    environmentFactory = spy(new TestEnvironmentFactory(installerRegistry, recipeRetriever));
 
     runtimes =
         new WorkspaceRuntimes(
             eventService,
+            Collections.singletonMap("type1", environmentFactory),
             Collections.singleton(infrastructure),
             sharedPool,
             workspaceDao,
@@ -93,7 +96,7 @@ public class WorkspaceRuntimesTest {
     mockWorkspace(identity);
     RuntimeContext context = mockContext(identity);
     when(context.getRuntime()).thenReturn(new TestInternalRuntime(context));
-    doReturn(context).when(infrastructure).prepare(eq(identity), anyObject());
+    doReturn(context).when(infrastructure).prepare(eq(identity), any());
 
     // try recover
     runtimes.recoverOne(infrastructure, identity);
@@ -131,11 +134,7 @@ public class WorkspaceRuntimesTest {
     RuntimeIdentity identity = new RuntimeIdentityImpl("workspace123", "my-env", "me");
 
     mockWorkspace(identity);
-    InternalEnvironment internalEnvironment = mock(InternalEnvironment.class);
-    doReturn(internalEnvironment).when(infrastructure).estimate(any(Environment.class));
-    doThrow(new InfrastructureException("oops!"))
-        .when(infrastructure)
-        .prepare(eq(identity), any(InternalEnvironment.class));
+    doThrow(new InfrastructureException("oops!")).when(infrastructure).prepare(eq(identity), any());
 
     // try recover
     runtimes.recoverOne(infrastructure, identity);
@@ -155,6 +154,7 @@ public class WorkspaceRuntimesTest {
     Map<String, Machine> r1machines = ImmutableMap.of("m1", mock(Machine.class));
     InternalRuntime runtime1 = spy(new TestInternalRuntime(context, r1machines));
     when(context.getRuntime()).thenReturn(runtime1);
+    doReturn(context).when(infrastructure).prepare(eq(identity), any());
     runtimes.recoverOne(infrastructure, identity);
 
     // runtime 2 must not be saved
@@ -177,7 +177,13 @@ public class WorkspaceRuntimesTest {
         spy(new TestInfrastructure(installerRegistry, recipeRetriever, "test1", "test2"));
 
     new WorkspaceRuntimes(
-            eventService, Collections.singleton(infra), sharedPool, workspaceDao, dbInitializer)
+            eventService,
+            Collections.singletonMap(
+                "test", new TestEnvironmentFactory(installerRegistry, recipeRetriever)),
+            Collections.singleton(infra),
+            sharedPool,
+            workspaceDao,
+            dbInitializer)
         .recover();
 
     verify(infra).getIdentities();
@@ -187,7 +193,7 @@ public class WorkspaceRuntimesTest {
       throws ValidationException, InfrastructureException {
     RuntimeContext context = mock(RuntimeContext.class);
     InternalEnvironment internalEnvironment = mock(InternalEnvironment.class);
-    doReturn(internalEnvironment).when(infrastructure).estimate(anyObject());
+    //    doReturn(internalEnvironment).when(infrastructure).estimate(anyObject());
     doReturn(context).when(infrastructure).prepare(eq(identity), eq(internalEnvironment));
     when(context.getInfrastructure()).thenReturn(infrastructure);
     when(context.getIdentity()).thenReturn(identity);
@@ -212,6 +218,29 @@ public class WorkspaceRuntimesTest {
     return workspace;
   }
 
+  private static class TestEnvironmentFactory extends InternalEnvironmentFactory {
+
+    public TestEnvironmentFactory(
+        InstallerRegistry installerRegistry, RecipeRetriever recipeRetriever) {
+      super(installerRegistry, recipeRetriever);
+    }
+
+    @Override
+    public InternalEnvironment create(Environment environment)
+        throws InfrastructureException, ValidationException {
+      return new TestInternalEnvironment(environment, this.installerRegistry, this.recipeRetriever);
+    }
+  }
+
+  private static class TestInternalEnvironment extends InternalEnvironment {
+
+    public TestInternalEnvironment(
+        Environment environment, InstallerRegistry registry, RecipeRetriever recipeRetriever)
+        throws InfrastructureException {
+      super(environment, registry, recipeRetriever);
+    }
+  }
+
   private static class TestInfrastructure extends RuntimeInfrastructure {
     public TestInfrastructure(
         InstallerRegistry installerRegistry, RecipeRetriever recipeRetriever) {
@@ -220,23 +249,16 @@ public class WorkspaceRuntimesTest {
 
     public TestInfrastructure(
         InstallerRegistry installerRegistry, RecipeRetriever recipeRetriever, String... types) {
-      super(
-          "test",
-          Arrays.asList(types),
-          null,
-          installerRegistry,
-          recipeRetriever,
-          Collections.emptySet(),
-          null);
+      super("test", Arrays.asList(types), null);
     }
 
-    @Override
-    public void internalEstimate(InternalEnvironment internalEnvironment) {
-      throw new UnsupportedOperationException();
-    }
+    //    @Override
+    //    public void internalEstimate(InternalEnvironment internalEnvironment) {
+    //      throw new UnsupportedOperationException();
+    //    }
 
     @Override
-    public RuntimeContext internalPrepare(RuntimeIdentity id, InternalEnvironment environment)
+    public RuntimeContext prepare(RuntimeIdentity id, InternalEnvironment environment)
         throws InfrastructureException {
       throw new UnsupportedOperationException();
     }
