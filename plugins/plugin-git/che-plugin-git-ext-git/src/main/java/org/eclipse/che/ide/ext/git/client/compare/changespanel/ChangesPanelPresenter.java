@@ -29,7 +29,6 @@ public class ChangesPanelPresenter implements ChangesPanelView.ActionDelegate {
 
   private static final String REVISION = "HEAD";
   private final ChangesPanelView view;
-  private final GitLocalizationConstant locale;
 
   private AlteredFiles changedFiles;
   private ViewMode viewMode;
@@ -39,8 +38,6 @@ public class ChangesPanelPresenter implements ChangesPanelView.ActionDelegate {
   @Inject
   public ChangesPanelPresenter(
       GitLocalizationConstant locale, ChangesPanelView view, ComparePresenter comparePresenter) {
-
-    this.locale = locale;
     this.view = view;
     this.view.setDelegate(this);
     this.viewMode = TREE;

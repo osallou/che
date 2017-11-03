@@ -1877,8 +1877,8 @@
                         <arg>-noincremental</arg>
                         <!-- For che-in-che development, the CodeServer launched
                              inside a container must be reachable at local machine. -->
-                        <arg>-bindAddress</arg>
-                        <arg>0.0.0.0</arg>
+                        <!--<arg>-bindAddress</arg>-->
+                        <!--<arg>0.0.0.0</arg>-->
                     </codeserverArgs>
                     <jvmArgs>
                         <arg>${gwt.compiler.jvmArgs.Xss}</arg>
