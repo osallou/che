@@ -25,11 +25,12 @@ import static org.testng.AssertJUnit.assertEquals;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.ValidationException;
-import org.eclipse.che.api.core.model.workspace.config.Environment;
+import org.eclipse.che.api.core.model.workspace.Warning;
 import org.eclipse.che.api.core.model.workspace.runtime.Machine;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.core.notification.EventService;
@@ -42,6 +43,8 @@ import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironmentFactory;
+import org.eclipse.che.api.workspace.server.spi.InternalMachineConfig;
+import org.eclipse.che.api.workspace.server.spi.InternalRecipe;
 import org.eclipse.che.api.workspace.server.spi.InternalRuntime;
 import org.eclipse.che.api.workspace.server.spi.RecipeRetriever;
 import org.eclipse.che.api.workspace.server.spi.RuntimeContext;
@@ -226,18 +229,20 @@ public class WorkspaceRuntimesTest {
     }
 
     @Override
-    public InternalEnvironment create(Environment environment)
+    protected InternalEnvironment create(Map<String, InternalMachineConfig> machines,
+        InternalRecipe recipe, List<Warning> warnings)
         throws InfrastructureException, ValidationException {
-      return new TestInternalEnvironment(environment, this.installerRegistry, this.recipeRetriever);
+      return new TestInternalEnvironment(machines, recipe, warnings);
     }
   }
 
   private static class TestInternalEnvironment extends InternalEnvironment {
 
     public TestInternalEnvironment(
-        Environment environment, InstallerRegistry registry, RecipeRetriever recipeRetriever)
-        throws InfrastructureException {
-      super(environment, registry, recipeRetriever);
+        Map<String, InternalMachineConfig> machines,
+        InternalRecipe recipe,
+        List<Warning> warnings) {
+      super(machines, recipe, warnings);
     }
   }
 
@@ -252,10 +257,6 @@ public class WorkspaceRuntimesTest {
       super("test", Arrays.asList(types), null);
     }
 
-    //    @Override
-    //    public void internalEstimate(InternalEnvironment internalEnvironment) {
-    //      throw new UnsupportedOperationException();
-    //    }
 
     @Override
     public RuntimeContext prepare(RuntimeIdentity id, InternalEnvironment environment)
