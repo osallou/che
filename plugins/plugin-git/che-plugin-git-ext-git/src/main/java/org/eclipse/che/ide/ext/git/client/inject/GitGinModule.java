@@ -28,6 +28,8 @@ import org.eclipse.che.ide.ext.git.client.add.AddToIndexView;
 import org.eclipse.che.ide.ext.git.client.add.AddToIndexViewImpl;
 import org.eclipse.che.ide.ext.git.client.branch.BranchView;
 import org.eclipse.che.ide.ext.git.client.branch.BranchViewImpl;
+import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelViewWithCheckBoxes;
+import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelViewWithCheckBoxesImpl;
 import org.eclipse.che.ide.ext.git.client.commit.CommitView;
 import org.eclipse.che.ide.ext.git.client.commit.CommitViewImpl;
 import org.eclipse.che.ide.ext.git.client.compare.branchlist.BranchListView;
@@ -109,6 +111,7 @@ public class GitGinModule extends AbstractGinModule {
     bind(HistoryView.class).to(HistoryViewImpl.class).in(Singleton.class);
     bind(GitOutputPartView.class).to(GitOutputPartViewImpl.class);
     bind(ChangesPanelView.class).to(ChangesPanelViewImpl.class);
+    bind(ChangesPanelViewWithCheckBoxes.class).to(ChangesPanelViewWithCheckBoxesImpl.class);
     install(
         new GinFactoryModuleBuilder()
             .implement(GitOutputConsole.class, GitOutputConsolePresenter.class)

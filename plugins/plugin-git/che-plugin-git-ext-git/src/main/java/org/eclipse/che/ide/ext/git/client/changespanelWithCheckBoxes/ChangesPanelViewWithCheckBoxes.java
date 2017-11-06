@@ -12,7 +12,6 @@ package org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes;
 
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelView;
 import org.eclipse.che.ide.resource.Path;
 
@@ -25,7 +24,8 @@ public interface ChangesPanelViewWithCheckBoxes extends ChangesPanelView {
   interface ActionDelegate {
     void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue);
 
-    List<String> getChangedFiles();
+    List<String> getSelectedFiles();
+    List<String> getAllFiles();
   }
 
   void setDelegate(ChangesPanelViewWithCheckBoxes.ActionDelegate delegate);

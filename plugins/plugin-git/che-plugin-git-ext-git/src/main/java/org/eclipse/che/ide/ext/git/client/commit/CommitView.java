@@ -39,29 +39,13 @@ public interface CommitView extends View<CommitView.ActionDelegate> {
     /** Performs any actions appropriate in response to the user having changed something. */
     void onValueChanged();
 
-    /**
-     * Performs any actions appropriate in response to the user having clicked on changed file
-     * check-box.
-     */
-    void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue);
-
     /** Set the commit message for an amend commit. */
     void setAmendCommitMessage();
-
-    /** Get list of changed files paths. */
-    List<String> getChangedFiles();
   }
 
   /** @return entered message */
   @NotNull
   String getMessage();
-
-  /**
-   * Mark check-boxes of given paths as checked.
-   *
-   * @param paths pats of nodes
-   */
-  void setMarkedCheckBoxes(Set<Path> paths);
 
   /** Returns selected remote branch from branches drop-down list. */
   String getRemoteBranch();

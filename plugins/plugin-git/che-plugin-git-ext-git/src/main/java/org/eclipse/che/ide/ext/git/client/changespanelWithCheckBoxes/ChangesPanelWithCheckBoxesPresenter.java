@@ -10,15 +10,15 @@
  */
 package org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import com.google.inject.Inject;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
+import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelViewWithCheckBoxes.ActionDelegate;
+import org.eclipse.che.ide.ext.git.client.compare.AlteredFiles;
 import org.eclipse.che.ide.ext.git.client.compare.ComparePresenter;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelPresenter;
-import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelView;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -27,17 +27,33 @@ import org.eclipse.che.ide.resource.Path;
  * @author Igor Vinokur
  */
 public class ChangesPanelWithCheckBoxesPresenter extends ChangesPanelPresenter
-    implements ChangesPanelViewWithCheckBoxes.ActionDelegate {
+    implements ActionDelegate {
 
   private final ChangesPanelViewWithCheckBoxes view;
-  private List<String> changedFiles;
+  private List<String> selectedFiles;
+  private List<String> allFiles;
+  private HasHandler hasHandler;
+
+  public interface HasHandler {
+    void onValueChanged();
+  }
 
   @Inject
   public ChangesPanelWithCheckBoxesPresenter(
-      GitLocalizationConstant locale, ChangesPanelViewWithCheckBoxes view, ComparePresenter comparePresenter) {
+      GitLocalizationConstant locale,
+      ChangesPanelViewWithCheckBoxes view,
+      ComparePresenter comparePresenter) {
     super(locale, view, comparePresenter);
+    view.setDelegate((ActionDelegate) this);
     this.view = view;
-    changedFiles = new ArrayList<>();
+    selectedFiles = new ArrayList<>();
+  }
+
+  public void show(AlteredFiles alteredFiles, HasHandler hasHandler) {
+    selectedFiles.clear();
+    allFiles = alteredFiles.getAlteredFilesList();
+    this.hasHandler = hasHandler;
+    super.show(alteredFiles);
   }
 
   public void setMarkedCheckBoxes(Set<Path> paths) {
@@ -45,16 +61,22 @@ public class ChangesPanelWithCheckBoxesPresenter extends ChangesPanelPresenter
   }
 
   @Override
-  public List<String> getChangedFiles() {
-    return changedFiles;
+  public List<String> getSelectedFiles() {
+    return selectedFiles;
+  }
+
+  @Override
+  public List<String> getAllFiles() {
+    return allFiles;
   }
 
   @Override
   public void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue) {
     if (newCheckBoxValue) {
-      changedFiles.add(path.toString());
+      selectedFiles.add(path.toString());
     } else {
-      changedFiles.remove(path.toString());
+      selectedFiles.remove(path.toString());
     }
+    hasHandler.onValueChanged();
   }
 }

@@ -21,11 +21,9 @@ import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitResources;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangedFileNode;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangedFolderNode;
-import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelView;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelViewImpl;
 import org.eclipse.che.ide.project.shared.NodesResources;
 import org.eclipse.che.ide.resource.Path;
-import org.eclipse.che.ide.ui.smartTree.*;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
@@ -57,7 +55,7 @@ public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
 
   @Override
   public void setMarkedCheckBoxes(Set<Path> paths) {
-    render.setNodePaths(super.getNodePaths());
+    render.setNodePaths(getNodePaths());
     paths.forEach(path -> render.handleCheckBoxSelection(path, false));
   }
 
@@ -148,7 +146,7 @@ public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
       } else {
         unselectedNodePaths.remove(path);
       }
-      if (delegate.getChangedFiles().contains(path.toString())) {
+      if (delegate.getAllFiles().contains(path.toString())) {
         delegate.onFileNodeCheckBoxValueChanged(path, !checkBoxValue);
       }
     }
