@@ -35,6 +35,7 @@ import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
+import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftInternalEnvironment;
 import org.eclipse.che.workspace.infrastructure.openshift.provision.UniqueNamesProvisioner;
 
 /**
@@ -101,10 +102,10 @@ public class ServerExposer {
 
   private final String machineName;
   private final Container container;
-  private final OpenShiftEnvironment openShiftEnvironment;
+  private final OpenShiftInternalEnvironment openShiftEnvironment;
 
   public ServerExposer(
-      String machineName, Container container, OpenShiftEnvironment openShiftEnvironment) {
+      String machineName, Container container, OpenShiftInternalEnvironment openShiftEnvironment) {
     this.machineName = machineName;
     this.container = container;
     this.openShiftEnvironment = openShiftEnvironment;

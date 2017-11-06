@@ -20,10 +20,9 @@ import java.util.Set;
 import javax.inject.Singleton;
 import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
-import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.commons.lang.NameGenerator;
 import org.eclipse.che.workspace.infrastructure.openshift.Constants;
-import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
+import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftInternalEnvironment;
 
 /**
  * Changes names of OpenShift pods by adding the workspace identifier to the prefix also generates
@@ -42,8 +41,7 @@ public class UniqueNamesProvisioner implements ConfigurationProvisioner {
   public static final char SEPARATOR = '.';
 
   @Override
-  public void provision(
-      InternalEnvironment environment, OpenShiftEnvironment osEnv, RuntimeIdentity identity)
+  public void provision(OpenShiftInternalEnvironment osEnv, RuntimeIdentity identity)
       throws InfrastructureException {
     final String workspaceId = identity.getWorkspaceId();
     final Set<Pod> pods = new HashSet<>(osEnv.getPods().values());

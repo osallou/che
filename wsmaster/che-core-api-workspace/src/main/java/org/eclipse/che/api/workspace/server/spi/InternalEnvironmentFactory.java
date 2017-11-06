@@ -10,9 +10,22 @@
  */
 package org.eclipse.che.api.workspace.server.spi;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import org.eclipse.che.api.core.ValidationException;
+import org.eclipse.che.api.core.model.workspace.Warning;
 import org.eclipse.che.api.core.model.workspace.config.Environment;
+import org.eclipse.che.api.core.model.workspace.config.MachineConfig;
+import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
+import org.eclipse.che.api.installer.server.exception.InstallerException;
+import org.eclipse.che.api.installer.shared.model.Installer;
+import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
+import org.eclipse.che.api.workspace.server.model.impl.ServerConfigImpl;
 
 /**
  * Factory for Environment specific internal representation Related but not really bound to some
@@ -45,6 +58,72 @@ public abstract class InternalEnvironmentFactory {
    * @throws InfrastructureException if infrastructure specific error occures
    * @throws ValidationException if validation fails
    */
-  public abstract InternalEnvironment create(Environment environment)
+  public final InternalEnvironment create(final Environment environment)
+      throws InfrastructureException, ValidationException {
+
+    Map<String, InternalMachineConfig> machines = new HashMap<>();
+    List<Warning> warnings = new ArrayList<>();
+
+    // Workaround related to written docker image id into location instead of content
+    EnvironmentImpl envCopy = new EnvironmentImpl(environment);
+    if ("dockerimage".equals(environment.getRecipe().getType())
+        && environment.getRecipe().getLocation() != null) {
+      // move image from location to content
+      envCopy.getRecipe().setContent(environment.getRecipe().getLocation());
+      envCopy.getRecipe().setLocation(null);
+    }
+
+    InternalRecipe recipe = recipeRetriever.getRecipe(envCopy.getRecipe());
+
+    for (Map.Entry<String, ? extends MachineConfig> machineEntry :
+        envCopy.getMachines().entrySet()) {
+      MachineConfig machineConfig = machineEntry.getValue();
+
+      List<Installer> installers = null;
+      try {
+        installers = installerRegistry.getOrderedInstallers(machineConfig.getInstallers());
+      } catch (InstallerException e) {
+        throw new InfrastructureException(e);
+      }
+
+      machines.put(
+          machineEntry.getKey(),
+          new InternalMachineConfig(
+              installers,
+              normalizeServers(machineConfig.getServers()),
+              machineConfig.getEnv(),
+              machineConfig.getAttributes()));
+    }
+
+    return create(machines, recipe, warnings);
+  }
+
+  /**
+   * Implementation validates recipe and creates specific InternalEnvironment
+   *
+   * @param machines InternalMachineConfigs
+   * @param recipe recipe
+   * @param warnings list of warnings
+   * @throws InfrastructureException if infrastructure specific error occures
+   * @throws ValidationException if validation fails
+   * @return InternalEnvironment
+   */
+  protected abstract InternalEnvironment create(
+      Map<String, InternalMachineConfig> machines, InternalRecipe recipe, List<Warning> warnings)
       throws InfrastructureException, ValidationException;
+
+  private Map<String, ServerConfig> normalizeServers(Map<String, ? extends ServerConfig> servers) {
+    return servers
+        .entrySet()
+        .stream()
+        .collect(Collectors.toMap(Entry::getKey, e -> normalizeServer(e.getValue())));
+  }
+
+  private ServerConfig normalizeServer(ServerConfig serverConfig) {
+    String port = serverConfig.getPort();
+    if (port != null && !port.contains("/")) {
+      port = port + "/tcp";
+    }
+    return new ServerConfigImpl(port, serverConfig.getProtocol(), serverConfig.getPath());
+  }
 }

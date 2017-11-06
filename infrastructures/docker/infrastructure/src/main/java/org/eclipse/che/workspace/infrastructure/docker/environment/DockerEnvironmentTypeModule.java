@@ -14,9 +14,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironmentFactory;
 import org.eclipse.che.workspace.infrastructure.docker.environment.compose.ComposeInternalEnvironmentFactory;
-import org.eclipse.che.workspace.infrastructure.docker.environment.dockerfile.DockerfileEnvironmentParser;
 import org.eclipse.che.workspace.infrastructure.docker.environment.dockerfile.DockerfileInternalEnvironmentFactory;
-import org.eclipse.che.workspace.infrastructure.docker.environment.dockerimage.DockerImageEnvironmentParser;
 import org.eclipse.che.workspace.infrastructure.docker.environment.dockerimage.DockerimageInternalEnvironmentFactory;
 
 /** @author Alexander Garagatyi */
@@ -27,11 +25,7 @@ public class DockerEnvironmentTypeModule extends AbstractModule {
     MapBinder<String, InternalEnvironmentFactory> environmentFactories =
         MapBinder.newMapBinder(binder(), String.class, InternalEnvironmentFactory.class);
     environmentFactories.addBinding("compose").to(ComposeInternalEnvironmentFactory.class);
-    environmentFactories
-        .addBinding(DockerfileEnvironmentParser.TYPE)
-        .to(DockerfileInternalEnvironmentFactory.class);
-    environmentFactories
-        .addBinding(DockerImageEnvironmentParser.TYPE)
-        .to(DockerimageInternalEnvironmentFactory.class);
+    environmentFactories.addBinding("dockerfile").to(DockerfileInternalEnvironmentFactory.class);
+    environmentFactories.addBinding("dockerimage").to(DockerimageInternalEnvironmentFactory.class);
   }
 }

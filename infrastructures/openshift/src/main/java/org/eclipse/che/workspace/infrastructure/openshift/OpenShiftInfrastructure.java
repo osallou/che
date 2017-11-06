@@ -19,7 +19,6 @@ import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.api.workspace.server.spi.RuntimeInfrastructure;
-import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftEnvironment;
 import org.eclipse.che.workspace.infrastructure.openshift.environment.OpenShiftInternalEnvironment;
 
 /** @author Sergii Leshchenko */
@@ -38,23 +37,18 @@ public class OpenShiftInfrastructure extends RuntimeInfrastructure {
     this.infrastructureProvisioner = infrastructureProvisioner;
   }
 
-  //  @Override
-  //  public void internalEstimate(InternalEnvironment environment)
-  //      throws ValidationException, InfrastructureException {}
-
   @Override
   public OpenShiftRuntimeContext prepare(RuntimeIdentity id, InternalEnvironment environment)
       throws ValidationException, InfrastructureException {
-    // OpenShiftEnvironment openShiftEnvironment = envParser.parse(environment);
 
     String recipeType = environment.getRecipe().getType();
     if (recipeType.equals("openshift")) {
-      OpenShiftEnvironment openShiftEnvironment =
-          ((OpenShiftInternalEnvironment) environment).getOpenShiftEnvironment();
 
-      infrastructureProvisioner.provision(environment, openShiftEnvironment, id);
+      OpenShiftInternalEnvironment openShiftEnvironment =
+          (OpenShiftInternalEnvironment) environment;
+      infrastructureProvisioner.provision(openShiftEnvironment, id);
 
-      return runtimeContextFactory.create(environment, openShiftEnvironment, id, this);
+      return runtimeContextFactory.create(openShiftEnvironment, id, this);
     } else {
       throw new InfrastructureException("Unknown recipe type " + recipeType);
     }

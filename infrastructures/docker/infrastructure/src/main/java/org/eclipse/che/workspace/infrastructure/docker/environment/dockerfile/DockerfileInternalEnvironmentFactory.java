@@ -10,22 +10,35 @@
  */
 package org.eclipse.che.workspace.infrastructure.docker.environment.dockerfile;
 
+import static java.lang.String.format;
+
+import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import org.eclipse.che.api.core.ValidationException;
-import org.eclipse.che.api.core.model.workspace.config.Environment;
+import org.eclipse.che.api.core.model.workspace.Warning;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironmentFactory;
+import org.eclipse.che.api.workspace.server.spi.InternalMachineConfig;
+import org.eclipse.che.api.workspace.server.spi.InternalRecipe;
 import org.eclipse.che.api.workspace.server.spi.RecipeRetriever;
 import org.eclipse.che.workspace.infrastructure.docker.container.ContainersStartStrategy;
 import org.eclipse.che.workspace.infrastructure.docker.environment.EnvironmentValidator;
+import org.eclipse.che.workspace.infrastructure.docker.environment.MachineNormalizer;
+import org.eclipse.che.workspace.infrastructure.docker.model.DockerBuildContext;
+import org.eclipse.che.workspace.infrastructure.docker.model.DockerContainerConfig;
+import org.eclipse.che.workspace.infrastructure.docker.model.DockerEnvironment;
 
 /**
  * @author Alexander Garagatyi
  * @author Alexander Andrienko
  */
 public class DockerfileInternalEnvironmentFactory extends InternalEnvironmentFactory {
+
+  public static final String TYPE = "dockerfile";
+  public static final String CONTENT_TYPE = "text/x-dockerfile";
 
   private final EnvironmentValidator validator;
   private final ContainersStartStrategy startStrategy;
@@ -42,9 +55,42 @@ public class DockerfileInternalEnvironmentFactory extends InternalEnvironmentFac
   }
 
   @Override
-  public InternalEnvironment create(Environment environment)
+  protected InternalEnvironment create(
+      Map<String, InternalMachineConfig> machines, InternalRecipe recipe, List<Warning> warnings)
       throws InfrastructureException, ValidationException {
-    return new DockerfileInternalEnvironment(
-        environment, installerRegistry, recipeRetriever, validator, startStrategy);
+
+    DockerEnvironment dockerEnvironment = dockerEnv(machines, recipe);
+    validator.validate(machines, dockerEnvironment);
+    // check that order can be resolved
+    startStrategy.order(dockerEnvironment);
+    return new DockerfileInternalEnvironment(machines, recipe, warnings, dockerEnvironment);
+  }
+
+  private DockerEnvironment dockerEnv(
+      Map<String, InternalMachineConfig> machines, InternalRecipe recipe)
+      throws ValidationException {
+    if (!TYPE.equals(recipe.getType())) {
+      throw new ValidationException(
+          format(
+              "Dockerfile environment parser doesn't support recipe type '%s'", recipe.getType()));
+    }
+
+    if (!CONTENT_TYPE.equals(recipe.getContentType())) {
+      throw new ValidationException(
+          format(
+              "Content type '%s' of recipe of environment is unsupported."
+                  + " Supported values are: text/x-dockerfile",
+              recipe.getContentType()));
+    }
+
+    Map.Entry<String, InternalMachineConfig> entry = machines.entrySet().iterator().next();
+
+    DockerEnvironment cheContainerEnv = new DockerEnvironment();
+    DockerContainerConfig container = new DockerContainerConfig();
+    cheContainerEnv.getContainers().put(entry.getKey(), container);
+    container.setBuild(new DockerBuildContext().setDockerfileContent(recipe.getContent()));
+    MachineNormalizer.normalizeMachine(entry.getKey(), container, entry.getValue());
+
+    return cheContainerEnv;
   }
 }

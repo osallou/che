@@ -102,7 +102,7 @@ public class DockerRuntimeInfrastructure extends RuntimeInfrastructure {
         dockerEnvironment = ((DockerimageInternalEnvironment) environment).getDockerEnvironment();
         break;
       case "compose":
-        dockerEnvironment = ((ComposeInternalEnvironment) environment).getDockerEnvironment();
+        dockerEnvironment = ((ComposeInternalEnvironment) environment).getComposeEnvironment();
         break;
       default:
         throw new InfrastructureException("Recipe type is not allowed " + type);

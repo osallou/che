@@ -10,17 +10,11 @@
  */
 package org.eclipse.che.api.workspace.server.spi;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.che.api.core.model.workspace.Warning;
 import org.eclipse.che.api.core.model.workspace.config.Environment;
-import org.eclipse.che.api.core.model.workspace.config.MachineConfig;
-import org.eclipse.che.api.installer.server.InstallerRegistry;
-import org.eclipse.che.api.installer.server.exception.InstallerException;
-import org.eclipse.che.api.installer.shared.model.Installer;
 
 /**
  * Representation of {@link Environment} which holds internal representations of environment
@@ -30,37 +24,17 @@ import org.eclipse.che.api.installer.shared.model.Installer;
  * @author gazarenkov
  */
 public abstract class InternalEnvironment {
+
   protected final InternalRecipe recipe;
   protected final Map<String, InternalMachineConfig> machines;
   protected final List<Warning> warnings;
 
   protected InternalEnvironment(
-      Environment environment, InstallerRegistry installerRegistry, RecipeRetriever recipeRetriever)
-      throws InfrastructureException {
+      Map<String, InternalMachineConfig> machines, InternalRecipe recipe, List<Warning> warnings) {
 
-    this.machines = new HashMap<>();
-    this.warnings = new ArrayList<>();
-    this.recipe = recipeRetriever.getRecipe(environment.getRecipe());
-
-    for (Map.Entry<String, ? extends MachineConfig> machineEntry :
-        environment.getMachines().entrySet()) {
-      MachineConfig machineConfig = machineEntry.getValue();
-
-      List<Installer> installers = null;
-      try {
-        installers = installerRegistry.getOrderedInstallers(machineConfig.getInstallers());
-      } catch (InstallerException e) {
-        throw new InfrastructureException(e);
-      }
-
-      this.machines.put(
-          machineEntry.getKey(),
-          new InternalMachineConfig(
-              installers,
-              machineConfig.getServers(),
-              machineConfig.getEnv(),
-              machineConfig.getAttributes()));
-    }
+    this.machines = machines;
+    this.recipe = recipe;
+    this.warnings = warnings;
   }
 
   /** Returns environment recipe which includes recipe content. */
