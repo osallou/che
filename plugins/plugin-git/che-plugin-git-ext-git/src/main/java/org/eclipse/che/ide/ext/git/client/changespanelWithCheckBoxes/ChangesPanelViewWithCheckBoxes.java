@@ -25,6 +25,7 @@ public interface ChangesPanelViewWithCheckBoxes extends ChangesPanelView {
     void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue);
 
     List<String> getSelectedFiles();
+
     List<String> getAllFiles();
   }
 
