@@ -39,9 +39,9 @@ import org.eclipse.che.ide.commons.exception.ServerException;
 import org.eclipse.che.ide.ext.git.client.DateTimeFormatter;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitServiceClient;
-import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelWithCheckBoxesPresenter;
 import org.eclipse.che.ide.ext.git.client.compare.AlteredFiles;
-import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelPresenter;
+import org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel.SelectableChangesPanelPresenter;
+import org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel.SelectionCallBack;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsole;
 import org.eclipse.che.ide.ext.git.client.outputconsole.GitOutputConsoleFactory;
 import org.eclipse.che.ide.processes.panel.ProcessesPanelPresenter;
@@ -56,12 +56,10 @@ import org.eclipse.che.ide.ui.dialogs.DialogFactory;
  * @author Igor Vinokur
  */
 @Singleton
-public class CommitPresenter
-    implements CommitView.ActionDelegate, ChangesPanelWithCheckBoxesPresenter.HasHandler {
+public class CommitPresenter implements CommitView.ActionDelegate, SelectionCallBack {
   private static final String COMMIT_COMMAND_NAME = "Git commit";
 
-  private final ChangesPanelPresenter changesPanelPresenter;
-  private final ChangesPanelWithCheckBoxesPresenter changesPanelWithCheckBoxesPresenter;
+  private final SelectableChangesPanelPresenter selectableChangesPanelPresenter;
   private final DialogFactory dialogFactory;
   private final AppContext appContext;
   private final CommitView view;
@@ -79,8 +77,7 @@ public class CommitPresenter
   public CommitPresenter(
       CommitView view,
       GitServiceClient service,
-      ChangesPanelPresenter changesPanelPresenter,
-      ChangesPanelWithCheckBoxesPresenter changesPanelWithCheckBoxesPresenter,
+      SelectableChangesPanelPresenter selectableChangesPanelPresenter,
       GitLocalizationConstant constant,
       NotificationManager notificationManager,
       DialogFactory dialogFactory,
@@ -89,8 +86,7 @@ public class CommitPresenter
       GitOutputConsoleFactory gitOutputConsoleFactory,
       ProcessesPanelPresenter processesPanelPresenter) {
     this.view = view;
-    this.changesPanelPresenter = changesPanelPresenter;
-    this.changesPanelWithCheckBoxesPresenter = changesPanelWithCheckBoxesPresenter;
+    this.selectableChangesPanelPresenter = selectableChangesPanelPresenter;
     this.dialogFactory = dialogFactory;
     this.appContext = appContext;
     this.dateTimeFormatter = dateTimeFormatter;
@@ -102,7 +98,7 @@ public class CommitPresenter
     this.notificationManager = notificationManager;
 
     this.filesToCommit = new ArrayList<>();
-    this.view.setChangesPanelView(changesPanelWithCheckBoxesPresenter.getView());
+    this.view.setChangesPanelView(selectableChangesPanelPresenter.getView());
   }
 
   public void showDialog(Project project) {
@@ -183,8 +179,8 @@ public class CommitPresenter
     view.setEnableCommitButton(!view.getMessage().isEmpty());
     view.focusInMessageField();
     view.showDialog();
-    changesPanelWithCheckBoxesPresenter.show(alteredFiles, this);
-    changesPanelWithCheckBoxesPresenter.setMarkedCheckBoxes(
+    selectableChangesPanelPresenter.show(alteredFiles, this);
+    selectableChangesPanelPresenter.setMarkedCheckBoxes(
         stream(appContext.getResources())
             .map(resource -> resource.getLocation().removeFirstSegments(1))
             .collect(Collectors.toSet()));
@@ -253,8 +249,12 @@ public class CommitPresenter
   public void onValueChanged() {
     view.setEnableCommitButton(
         !view.getMessage().isEmpty()
-            && (!changesPanelWithCheckBoxesPresenter.getSelectedFiles().isEmpty()
-                || view.isAmend()));
+            && (!selectableChangesPanelPresenter.getSelectedFiles().isEmpty() || view.isAmend()));
+  }
+
+  @Override
+  public void onSelectionChanged() {
+    onValueChanged();
   }
 
   @Override

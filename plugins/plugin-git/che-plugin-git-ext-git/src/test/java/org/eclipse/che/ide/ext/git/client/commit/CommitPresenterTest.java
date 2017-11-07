@@ -39,9 +39,8 @@ import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.commons.exception.ServerException;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
 import org.eclipse.che.ide.ext.git.client.DateTimeFormatter;
-import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelWithCheckBoxesPresenter;
 import org.eclipse.che.ide.ext.git.client.compare.AlteredFiles;
-import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelPresenter;
+import org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel.SelectableChangesPanelPresenter;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.ui.dialogs.confirm.ConfirmCallback;
 import org.eclipse.che.ide.ui.dialogs.confirm.ConfirmDialog;
@@ -61,7 +60,7 @@ public class CommitPresenterTest extends BaseTest {
 
   @Mock private CommitView view;
   @Mock private DateTimeFormatter dateTimeFormatter;
-  @Mock private ChangesPanelPresenter changesPanelPresenter;
+  @Mock private SelectableChangesPanelPresenter selectableChangesPanelPresenter;
 
   private CommitPresenter presenter;
 
@@ -74,8 +73,7 @@ public class CommitPresenterTest extends BaseTest {
             new CommitPresenter(
                 view,
                 service,
-                changesPanelPresenter,
-                mock(ChangesPanelWithCheckBoxesPresenter.class),
+                selectableChangesPanelPresenter,
                 constant,
                 notificationManager,
                 dialogFactory,
@@ -168,12 +166,11 @@ public class CommitPresenterTest extends BaseTest {
 
     verify(view).setEnableAmendCheckBox(true);
     verify(view).setEnablePushAfterCommitCheckBox(true);
-    verify(changesPanelPresenter).show(eq(alteredFiles));
+    verify(selectableChangesPanelPresenter).show(eq(alteredFiles));
     verify(view).focusInMessageField();
     verify(view).setEnableCommitButton(eq(DISABLE_BUTTON));
     verify(view).getMessage();
     verify(view).showDialog();
-    //    verify(view).setMarkedCheckBoxes(anySet());
   }
 
   @Test
@@ -197,12 +194,11 @@ public class CommitPresenterTest extends BaseTest {
 
     verify(view).setEnableAmendCheckBox(false);
     verify(view).setEnablePushAfterCommitCheckBox(false);
-    verify(changesPanelPresenter).show(eq(alteredFiles));
+    verify(selectableChangesPanelPresenter).show(eq(alteredFiles));
     verify(view).focusInMessageField();
     verify(view).setEnableCommitButton(eq(DISABLE_BUTTON));
     verify(view).getMessage();
     verify(view).showDialog();
-    //    verify(view).setMarkedCheckBoxes(anySet());
   }
 
   @Test
@@ -218,6 +214,19 @@ public class CommitPresenterTest extends BaseTest {
     verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
   }
 
+  //  @Test
+  //  public void shouldEnableCommitButton1() throws Exception {
+  //    when(view.getMessage()).thenReturn("foo");
+  //
+  //    presenter.showDialog(project);
+  //    verify(stringPromise).then(stringCaptor.capture());
+  //    stringCaptor.getValue().apply("M\tfile");
+  //    verify(logPromise).then(logCaptor.capture());
+  //    logCaptor.getValue().apply(null);
+  //
+  //    verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
+  //  }
+
   @Test
   public void shouldCloseWhenCancelButtonClicked() throws Exception {
     presenter.onCancelClicked();
@@ -229,7 +238,7 @@ public class CommitPresenterTest extends BaseTest {
   public void shouldDisableCommitButtonOnEmptyMessage() throws Exception {
     when(view.getMessage()).thenReturn(EMPTY_TEXT);
 
-    presenter.onValueChanged();
+    presenter.onSelectionChanged();
 
     verify(view).setEnableCommitButton(eq(DISABLE_BUTTON));
   }
@@ -239,7 +248,7 @@ public class CommitPresenterTest extends BaseTest {
     when(view.getMessage()).thenReturn(COMMIT_TEXT);
     when(view.isAmend()).thenReturn(true);
 
-    presenter.onValueChanged();
+    presenter.onSelectionChanged();
 
     verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
   }

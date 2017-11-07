@@ -8,15 +8,17 @@
  * Contributors:
  *   Red Hat, Inc. - initial API and implementation
  */
-package org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes;
+package org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitResources;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangedFileNode;
@@ -28,24 +30,20 @@ import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.data.Node;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
 
-import java.util.Comparator;
-import java.util.Set;
-import java.util.HashSet;
-
 /**
- * Implementation of {@link ChangesPanelViewWithCheckBoxes}.
+ * Implementation of {@link SelectableChangesPanelView}.
  *
  * @author Igor Vinokur
  */
 @Singleton
-public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
-    implements ChangesPanelViewWithCheckBoxes {
+public class SelectableChangesPanelViewImpl extends ChangesPanelViewImpl
+    implements SelectableChangesPanelView {
 
-  private ChangesPanelViewWithCheckBoxes.ActionDelegate delegate;
+  private SelectableChangesPanelView.ActionDelegate delegate;
   private CheckBoxRender render;
 
   @Inject
-  public ChangesPanelViewWithCheckBoxesImpl(
+  public SelectableChangesPanelViewImpl(
       GitResources resources, GitLocalizationConstant locale, NodesResources nodesResources) {
     super(resources, locale, nodesResources);
     this.render = new CheckBoxRender();
@@ -53,7 +51,7 @@ public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
   }
 
   @Override
-  public void setDelegate(ChangesPanelViewWithCheckBoxes.ActionDelegate delegate) {
+  public void setDelegate(SelectableChangesPanelView.ActionDelegate delegate) {
     this.delegate = delegate;
   }
 
@@ -71,7 +69,7 @@ public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
     private final Set<Path> indeterminateNodePaths;
 
     private CheckBoxRender() {
-      super(ChangesPanelViewWithCheckBoxesImpl.super.getTreeStyles());
+      super(SelectableChangesPanelViewImpl.super.getTreeStyles());
 
       this.allNodePaths = new HashSet<>();
       this.unselectedNodePaths = new HashSet<>();
@@ -104,8 +102,7 @@ public class ChangesPanelViewWithCheckBoxesImpl extends ChangesPanelViewImpl
             if (Event.ONCLICK == event.getTypeInt()
                 && event.getTarget().getTagName().equalsIgnoreCase("label")) {
               handleCheckBoxSelection(nodePath, checkBoxInputElement.isChecked());
-              ChangesPanelViewWithCheckBoxesImpl.super.refreshNodes();
-              // delegate.onValueChanged();
+              refreshNodes();
             }
           });
 

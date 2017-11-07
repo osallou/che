@@ -8,17 +8,17 @@
  * Contributors:
  *   Red Hat, Inc. - initial API and implementation
  */
-package org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes;
+package org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
-import org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes.ChangesPanelViewWithCheckBoxes.ActionDelegate;
 import org.eclipse.che.ide.ext.git.client.compare.AlteredFiles;
 import org.eclipse.che.ide.ext.git.client.compare.ComparePresenter;
 import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelPresenter;
+import org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel.SelectableChangesPanelView.ActionDelegate;
 import org.eclipse.che.ide.resource.Path;
 
 /**
@@ -26,22 +26,18 @@ import org.eclipse.che.ide.resource.Path;
  *
  * @author Igor Vinokur
  */
-public class ChangesPanelWithCheckBoxesPresenter extends ChangesPanelPresenter
+public class SelectableChangesPanelPresenter extends ChangesPanelPresenter
     implements ActionDelegate {
 
-  private final ChangesPanelViewWithCheckBoxes view;
+  private final SelectableChangesPanelView view;
   private List<String> selectedFiles;
   private List<String> allFiles;
-  private HasHandler hasHandler;
-
-  public interface HasHandler {
-    void onValueChanged();
-  }
+  private SelectionCallBack selectionCallBack;
 
   @Inject
-  public ChangesPanelWithCheckBoxesPresenter(
+  public SelectableChangesPanelPresenter(
       GitLocalizationConstant locale,
-      ChangesPanelViewWithCheckBoxes view,
+      SelectableChangesPanelView view,
       ComparePresenter comparePresenter) {
     super(locale, view, comparePresenter);
     view.setDelegate((ActionDelegate) this);
@@ -49,10 +45,10 @@ public class ChangesPanelWithCheckBoxesPresenter extends ChangesPanelPresenter
     selectedFiles = new ArrayList<>();
   }
 
-  public void show(AlteredFiles alteredFiles, HasHandler hasHandler) {
+  public void show(AlteredFiles alteredFiles, SelectionCallBack selectionCallBack) {
     selectedFiles.clear();
     allFiles = alteredFiles.getAlteredFilesList();
-    this.hasHandler = hasHandler;
+    this.selectionCallBack = selectionCallBack;
     super.show(alteredFiles);
   }
 
@@ -77,6 +73,6 @@ public class ChangesPanelWithCheckBoxesPresenter extends ChangesPanelPresenter
     } else {
       selectedFiles.remove(path.toString());
     }
-    hasHandler.onValueChanged();
+    selectionCallBack.onSelectionChanged();
   }
 }

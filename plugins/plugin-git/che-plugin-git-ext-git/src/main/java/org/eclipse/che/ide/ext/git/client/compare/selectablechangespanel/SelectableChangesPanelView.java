@@ -8,7 +8,7 @@
  * Contributors:
  *   Red Hat, Inc. - initial API and implementation
  */
-package org.eclipse.che.ide.ext.git.client.changespanelWithCheckBoxes;
+package org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel;
 
 import java.util.List;
 import java.util.Set;
@@ -16,11 +16,11 @@ import org.eclipse.che.ide.ext.git.client.compare.changespanel.ChangesPanelView;
 import org.eclipse.che.ide.resource.Path;
 
 /**
- * The view of {@link ChangesPanelWithCheckBoxesPresenter}.
+ * The view of {@link SelectableChangesPanelPresenter}.
  *
  * @author Igor Vinokur
  */
-public interface ChangesPanelViewWithCheckBoxes extends ChangesPanelView {
+public interface SelectableChangesPanelView extends ChangesPanelView {
   interface ActionDelegate {
     void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue);
 
@@ -29,7 +29,7 @@ public interface ChangesPanelViewWithCheckBoxes extends ChangesPanelView {
     List<String> getAllFiles();
   }
 
-  void setDelegate(ChangesPanelViewWithCheckBoxes.ActionDelegate delegate);
+  void setDelegate(SelectableChangesPanelView.ActionDelegate delegate);
 
   void setMarkedCheckBoxes(Set<Path> paths);
 }
