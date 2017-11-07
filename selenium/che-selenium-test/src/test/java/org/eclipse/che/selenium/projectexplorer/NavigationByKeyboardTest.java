@@ -13,8 +13,10 @@ package org.eclipse.che.selenium.projectexplorer;
 import com.google.inject.Inject;
 import java.net.URL;
 import java.nio.file.Paths;
+import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.eclipse.che.selenium.core.client.TestProjectServiceClient;
 import org.eclipse.che.selenium.core.project.ProjectTemplates;
+import org.eclipse.che.selenium.core.utils.WaitUtils;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Consoles;
@@ -76,6 +78,7 @@ public class NavigationByKeyboardTest {
   @Inject private NotificationsPopupPanel notificationsPopupPanel;
   @Inject private TestProjectServiceClient testProjectServiceClient;
   @Inject private Consoles consoles;
+  @Inject private SeleniumWebDriver seleniumWebDriver;
 
   @BeforeClass
   public void setUp() throws Exception {
@@ -137,6 +140,11 @@ public class NavigationByKeyboardTest {
     projectExplorer.sendToItemEnterKey();
     editor.waitActiveEditor();
     editor.waitTextIntoEditor(EXPECTED_TEXT_IN_JAVA_FILE);
+
+    WaitUtils.sleepQuietly(60);
+    seleniumWebDriver.navigate().refresh();
+    projectExplorer.waitProjectExplorer();
+    projectExplorer.waitItem(PROJECT_NAME);
 
     projectExplorer.selectVisibleItem(nameFirstModule);
     projectExplorer.sendToItemEnterKey();
