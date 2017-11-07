@@ -29,7 +29,6 @@ public abstract class RuntimeInfrastructure {
   private final Set<String> recipeTypes;
   private final String name;
   private final EventService eventService;
-  //  private final Map<String, InternalEnvironmentFactory> envBuilders = new HashMap<>();
 
   public RuntimeInfrastructure(String name, Collection<String> types, EventService eventService) {
     Preconditions.checkArgument(!types.isEmpty());

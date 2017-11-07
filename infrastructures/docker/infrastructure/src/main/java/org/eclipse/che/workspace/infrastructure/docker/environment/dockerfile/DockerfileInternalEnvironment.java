@@ -21,8 +21,7 @@ import org.eclipse.che.api.workspace.server.spi.InternalRecipe;
 import org.eclipse.che.workspace.infrastructure.docker.model.DockerEnvironment;
 
 /**
- * @author Alexander Garagatyi
- * @author Alexander Andrienko
+ * Dockerfile Internal Environment
  */
 public class DockerfileInternalEnvironment extends InternalEnvironment {
 

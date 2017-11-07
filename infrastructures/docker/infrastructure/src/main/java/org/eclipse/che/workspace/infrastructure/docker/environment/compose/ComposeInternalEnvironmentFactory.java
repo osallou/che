@@ -41,6 +41,7 @@ import org.eclipse.che.workspace.infrastructure.docker.model.DockerEnvironment;
  */
 public class ComposeInternalEnvironmentFactory extends InternalEnvironmentFactory {
 
+  public static final String TYPE = "compose";
   private static final ObjectMapper YAML_PARSER = new ObjectMapper(new YAMLFactory());
 
   @Inject

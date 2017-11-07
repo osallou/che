@@ -15,7 +15,9 @@ import java.util.Map;
 import javax.inject.Inject;
 import org.eclipse.che.api.core.ValidationException;
 import org.eclipse.che.api.core.model.workspace.Warning;
+import org.eclipse.che.api.core.model.workspace.config.Environment;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
+import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironmentFactory;
@@ -34,6 +36,8 @@ import org.eclipse.che.workspace.infrastructure.docker.model.DockerEnvironment;
  */
 public class DockerimageInternalEnvironmentFactory extends InternalEnvironmentFactory {
 
+  public static final String TYPE = "dockerimage";
+
   private final EnvironmentValidator validator;
   private final ContainersStartStrategy startStrategy;
 
@@ -49,15 +53,25 @@ public class DockerimageInternalEnvironmentFactory extends InternalEnvironmentFa
   }
 
   @Override
+  public InternalEnvironment create(final Environment environment)
+      throws InfrastructureException, ValidationException {
+
+    EnvironmentImpl envCopy = new EnvironmentImpl(environment);
+    if (envCopy.getRecipe().getLocation() != null) {
+      // move image from location to content
+      envCopy.getRecipe().setContent(environment.getRecipe().getLocation());
+      envCopy.getRecipe().setLocation(null);
+    }
+    return super.create(envCopy);
+  }
+
+  @Override
   protected InternalEnvironment create(
       Map<String, InternalMachineConfig> machines, InternalRecipe recipe, List<Warning> warnings)
       throws InfrastructureException, ValidationException {
 
     DockerEnvironment dockerEnvironment = dockerEnv(machines, recipe);
     validator.validate(machines, dockerEnvironment);
-    // check that order can be resolved
-    startStrategy.order(dockerEnvironment);
-
     return new DockerimageInternalEnvironment(machines, recipe, warnings, dockerEnvironment);
   }
 

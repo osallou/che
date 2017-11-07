@@ -24,8 +24,8 @@ public class DockerEnvironmentTypeModule extends AbstractModule {
     // Environment type
     MapBinder<String, InternalEnvironmentFactory> environmentFactories =
         MapBinder.newMapBinder(binder(), String.class, InternalEnvironmentFactory.class);
-    environmentFactories.addBinding("compose").to(ComposeInternalEnvironmentFactory.class);
-    environmentFactories.addBinding("dockerfile").to(DockerfileInternalEnvironmentFactory.class);
-    environmentFactories.addBinding("dockerimage").to(DockerimageInternalEnvironmentFactory.class);
+    environmentFactories.addBinding(ComposeInternalEnvironmentFactory.TYPE).to(ComposeInternalEnvironmentFactory.class);
+    environmentFactories.addBinding(DockerfileInternalEnvironmentFactory.TYPE).to(DockerfileInternalEnvironmentFactory.class);
+    environmentFactories.addBinding(DockerimageInternalEnvironmentFactory.TYPE).to(DockerimageInternalEnvironmentFactory.class);
   }
 }

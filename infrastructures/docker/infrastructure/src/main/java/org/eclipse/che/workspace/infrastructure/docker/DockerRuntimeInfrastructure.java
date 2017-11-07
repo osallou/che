@@ -60,34 +60,6 @@ public class DockerRuntimeInfrastructure extends RuntimeInfrastructure {
     this.containers = containers;
   }
 
-  //  @Override
-  //  public InternalEnvironment estimate(Environment environment)
-  //      throws ValidationException, InfrastructureException {
-  //    // workaround that in dockerimage environment image is in location field instead of content
-  //    if (DockerImageEnvironmentParser.TYPE.equals(environment.getRecipe().getType())
-  //        && environment.getRecipe().getLocation() != null) {
-  //      // move image from location to content
-  //      EnvironmentImpl envCopy = new EnvironmentImpl(environment);
-  //      envCopy.getRecipe().setContent(environment.getRecipe().getLocation());
-  //      envCopy.getRecipe().setLocation(null);
-  //      return super.estimate(envCopy);
-  //    }
-  //
-  //    return super.estimate(environment);
-  //  }
-
-  //  @Override
-  //  public void internalEstimate(InternalEnvironment environment)
-  //      throws ValidationException, InfrastructureException {
-  //    DockerEnvironment dockerEnvironment = dockerEnvironmentParser.parse(environment);
-  //    dockerEnvironmentValidator.validate(environment, dockerEnvironment);
-  //    // check that order can be resolved
-  //    startStrategy.order(dockerEnvironment);
-  //    // TODO add an actual estimation of what is missing in the environment
-  //    // memory
-  //    // machines
-  //  }
-
   @Override
   public DockerRuntimeContext prepare(RuntimeIdentity identity, InternalEnvironment environment)
       throws ValidationException, InfrastructureException {

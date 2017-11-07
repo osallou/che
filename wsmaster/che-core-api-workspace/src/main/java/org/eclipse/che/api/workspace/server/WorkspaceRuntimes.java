@@ -129,12 +129,13 @@ public class WorkspaceRuntimes {
 
   public void validate(Environment environment)
       throws NotFoundException, InfrastructureException, ValidationException {
+
     String type = environment.getRecipe().getType();
     if (!infraByRecipe.containsKey(type)) {
       throw new NotFoundException("Infrastructure not found for type: " + type);
     }
+    environmentFactory(type).create(environment);
 
-    environmentFactories.get(environment.getRecipe().getType()).create(environment);
   }
 
   /**
@@ -218,8 +219,8 @@ public class WorkspaceRuntimes {
     RuntimeIdentity runtimeId =
         new RuntimeIdentityImpl(workspaceId, envName, subject.getUserName());
     try {
-      InternalEnvironment internalEnvironment =
-          environmentFactories.get(environment.getRecipe().getType()).create(environment);
+      InternalEnvironment internalEnvironment = environmentFactory(environment.getRecipe().getType())
+          .create(environment);
       RuntimeContext runtimeContext = infra.prepare(runtimeId, internalEnvironment);
 
       InternalRuntime runtime = runtimeContext.getRuntime();
@@ -475,10 +476,10 @@ public class WorkspaceRuntimes {
 
     InternalRuntime runtime;
     try {
-      InternalEnvironment internalEnvironment =
-          environmentFactories.get(environment.getRecipe().getType()).create(environment);
+      InternalEnvironment internalEnvironment = environmentFactory(environment.getRecipe().getType())
+          .create(environment);
       runtime = infra.prepare(identity, internalEnvironment).getRuntime();
-    } catch (InfrastructureException | ValidationException x) {
+    } catch (InfrastructureException | ValidationException | NotFoundException x) {
       LOG.error(
           "Couldn't recover runtime '{}:{}'. Error: {}",
           identity.getWorkspaceId(),
@@ -572,6 +573,13 @@ public class WorkspaceRuntimes {
       return Optional.empty();
     }
     return Optional.of(state.runtime.getContext());
+  }
+
+  private InternalEnvironmentFactory environmentFactory(String recipeType) throws NotFoundException {
+    InternalEnvironmentFactory factory = environmentFactories.get(recipeType);
+    if(factory == null)
+      throw new NotFoundException(format("InternalEnvironmentFactory not configured for recipe type: '%s'", recipeType));
+    return factory;
   }
 
   private String sessionUserNameOr(String nameIfNoUser) {

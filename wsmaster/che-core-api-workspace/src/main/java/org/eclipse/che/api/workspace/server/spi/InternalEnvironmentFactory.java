@@ -24,7 +24,6 @@ import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
 import org.eclipse.che.api.installer.server.exception.InstallerException;
 import org.eclipse.che.api.installer.shared.model.Installer;
-import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConfigImpl;
 
 /**
@@ -52,31 +51,23 @@ public abstract class InternalEnvironmentFactory {
 
   /**
    * validates internals of Environment and creates instance of InternalEnvironment
+   * ideally it should be final but needed to be owerriden for Dockerimage type workaround
    *
    * @param environment the environment
    * @return InternalEnvironment
    * @throws InfrastructureException if infrastructure specific error occures
    * @throws ValidationException if validation fails
    */
-  public final InternalEnvironment create(final Environment environment)
+  public InternalEnvironment create(final Environment environment)
       throws InfrastructureException, ValidationException {
 
     Map<String, InternalMachineConfig> machines = new HashMap<>();
     List<Warning> warnings = new ArrayList<>();
 
-    // Workaround related to written docker image id into location instead of content
-    EnvironmentImpl envCopy = new EnvironmentImpl(environment);
-    if ("dockerimage".equals(environment.getRecipe().getType())
-        && environment.getRecipe().getLocation() != null) {
-      // move image from location to content
-      envCopy.getRecipe().setContent(environment.getRecipe().getLocation());
-      envCopy.getRecipe().setLocation(null);
-    }
-
-    InternalRecipe recipe = recipeRetriever.getRecipe(envCopy.getRecipe());
+    InternalRecipe recipe = recipeRetriever.getRecipe(environment.getRecipe());
 
     for (Map.Entry<String, ? extends MachineConfig> machineEntry :
-        envCopy.getMachines().entrySet()) {
+        environment.getMachines().entrySet()) {
       MachineConfig machineConfig = machineEntry.getValue();
 
       List<Installer> installers = null;

@@ -61,8 +61,6 @@ public class DockerfileInternalEnvironmentFactory extends InternalEnvironmentFac
 
     DockerEnvironment dockerEnvironment = dockerEnv(machines, recipe);
     validator.validate(machines, dockerEnvironment);
-    // check that order can be resolved
-    startStrategy.order(dockerEnvironment);
     return new DockerfileInternalEnvironment(machines, recipe, warnings, dockerEnvironment);
   }
 
