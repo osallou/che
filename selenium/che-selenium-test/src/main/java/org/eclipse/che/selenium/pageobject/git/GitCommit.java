@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.eclipse.che.selenium.core.SeleniumWebDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
@@ -137,6 +138,24 @@ public class GitCommit {
         .until(
             ExpectedConditions.elementToBeSelected(
                 (By.xpath(String.format(Locators.TREE_ITEM_CHECK_BOX + "//input", itemName)))));
+  }
+
+  /**
+   * Wait for item check-box in the 'Git changed files tree panel' to be indeterminate.
+   *
+   * @param itemName name of the item
+   */
+  public void waitItemCheckBoxToBeIndeterminate(String itemName) {
+    new WebDriverWait(seleniumWebDriver, 5)
+        .until(
+            (ExpectedCondition<Boolean>)
+                webDriver ->
+                    seleniumWebDriver
+                        .findElement(
+                            By.xpath(
+                                String.format(Locators.TREE_ITEM_CHECK_BOX + "//input", itemName)))
+                        .getAttribute("id")
+                        .endsWith("indeterminate"));
   }
 
   /**

@@ -91,8 +91,16 @@ public class SelectableChangesPanelViewImpl extends ChangesPanelViewImpl
           node instanceof ChangedFileNode
               ? Path.valueOf(node.getName())
               : ((ChangedFolderNode) node).getPath();
-      checkBoxInputElement.setChecked(!unselectedNodePaths.contains(nodePath));
-      setIndeterminate(checkBoxInputElement, indeterminateNodePaths.contains(nodePath));
+
+      if (indeterminateNodePaths.contains(nodePath)) {
+        checkBoxInputElement.setId(checkBoxInputElement.getId() + "-indeterminate");
+        setIndeterminate(checkBoxInputElement);
+      } else if (!unselectedNodePaths.contains(nodePath)) {
+        checkBoxInputElement.setChecked(true);
+        checkBoxInputElement.setId(checkBoxInputElement.getId() + "-checked");
+      } else {
+        checkBoxInputElement.setId(checkBoxInputElement.getId() + "-unchecked");
+      }
 
       // Add check-box click handler.
       Event.sinkEvents(checkBoxElement, Event.ONCLICK);
@@ -118,8 +126,8 @@ public class SelectableChangesPanelViewImpl extends ChangesPanelViewImpl
       unselectedNodePaths.addAll(paths);
     }
 
-    private native void setIndeterminate(Element checkbox, boolean indeterminate) /*-{
-        checkbox.indeterminate = indeterminate;
+    private native void setIndeterminate(Element checkbox) /*-{
+        checkbox.indeterminate = true;
     }-*/;
 
     /**
@@ -136,25 +144,25 @@ public class SelectableChangesPanelViewImpl extends ChangesPanelViewImpl
                   !(path.equals(nodePath) || path.isEmpty())
                       && path.isPrefixOf(nodePath)
                       && !hasSelectedChildes(path))
-          .forEach(path -> saveCheckBoxState(path, value));
+          .forEach(path -> handleCheckBoxState(path, value));
 
       allNodePaths
           .stream()
           .sorted((path1, path2) -> path2.toString().compareTo(path1.toString()))
           .filter(
               path -> !path.isEmpty() && (nodePath.isPrefixOf(path) || path.isPrefixOf(nodePath)))
-          .forEach(path -> saveCheckBoxState(path, value));
+          .forEach(path -> handleCheckBoxState(path, value));
     }
 
-    private void saveCheckBoxState(Path path, boolean checked) {
-      if (checked) {
+    private void handleCheckBoxState(Path path, boolean isChecked) {
+      if (isChecked) {
         unselectedNodePaths.add(path);
       } else {
         unselectedNodePaths.remove(path);
       }
 
       if (delegate.getAllFiles().contains(path.toString())) {
-        delegate.onFileNodeCheckBoxValueChanged(path, !checked);
+        delegate.onFileNodeCheckBoxValueChanged(path, !isChecked);
       }
 
       if (hasSelectedChildes(path) && !hasAllSelectedChildes(path)) {

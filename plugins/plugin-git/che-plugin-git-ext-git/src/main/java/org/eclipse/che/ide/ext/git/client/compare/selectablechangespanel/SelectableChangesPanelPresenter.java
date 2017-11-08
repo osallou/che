@@ -22,7 +22,7 @@ import org.eclipse.che.ide.ext.git.client.compare.selectablechangespanel.Selecta
 import org.eclipse.che.ide.resource.Path;
 
 /**
- * Presenter for displaying list of changed files.
+ * Presenter for displaying list of changed files with ability to select particular files.
  *
  * @author Igor Vinokur
  */

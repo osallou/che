@@ -21,15 +21,27 @@ import org.eclipse.che.ide.resource.Path;
  * @author Igor Vinokur
  */
 public interface SelectableChangesPanelView extends ChangesPanelView {
+
+  /** Needs for delegating actions into {@link SelectableChangesPanelPresenter}. */
   interface ActionDelegate {
+
+    /** Is called when item check-box changed selection state. */
     void onFileNodeCheckBoxValueChanged(Path path, boolean newCheckBoxValue);
 
+    /** Get list of all file paths. */
     List<String> getSelectedFiles();
 
+    /** Get list of selected file paths. */
     List<String> getAllFiles();
   }
 
+  /** Set implemented actions to {@link SelectableChangesPanelViewImpl} */
   void setDelegate(SelectableChangesPanelView.ActionDelegate delegate);
 
+  /**
+   * Set check-boxes state of given paths to checked.
+   *
+   * @param paths pats of nodes
+   */
   void setMarkedCheckBoxes(Set<Path> paths);
 }

@@ -1369,6 +1369,8 @@ public interface Theme {
    */
   String checkBoxIconColor();
 
+  String checkBoxIndeterminateIconColor();
+
   String checkBoxFontColor();
 
   String checkBoxBorderColor();

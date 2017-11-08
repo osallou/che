@@ -105,7 +105,7 @@ input::selection {
     content: "\2714";
     font-size: 14px;
     font-weight: normal;
-    color: #707071;
+    color: checkBoxIndeterminateIconColor;
 }
 
 .gwt-CheckBox input[disabled] + label {

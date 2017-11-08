@@ -1323,6 +1323,11 @@ public class DarkTheme implements Theme {
   }
 
   @Override
+  public String checkBoxIndeterminateIconColor() {
+    return "#707070";
+  }
+
+  @Override
   public String checkBoxFontColor() {
     return this.getTextFieldColor();
   }
