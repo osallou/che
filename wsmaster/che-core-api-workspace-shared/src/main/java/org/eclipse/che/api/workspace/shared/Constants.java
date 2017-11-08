@@ -68,13 +68,6 @@ public final class Constants {
   public static final String SERVER_EXEC_AGENT_WEBSOCKET_REFERENCE = "exec-agent/ws";
 
   public static final String WS_AGENT_PORT = "4401/tcp";
-  public static final String WS_AGENT_TRACK_CONNECTION_SUBSCRIBE =
-      "ws-agent/track/connection/subscribe";
-  public static final String WS_AGENT_TRACK_CONNECTION_UNSUBSCRIBE =
-      "ws-agent/track/connection/unsubscribe";
-  public static final String WS_AGENT_TRACK_CONNECTION_HEARTBEAT =
-      "ws-agent/track/connection/heartbeat";
-  public static final int WS_AGENT_TRACK_CONNECTION_PERIOD = 5_000; // milliseconds
 
   public static final String WS_MACHINE_NAME = "default";
 

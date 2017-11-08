@@ -13,22 +13,20 @@ package org.eclipse.che.ide.core;
 import static java.util.Collections.emptyMap;
 import static org.eclipse.che.api.core.model.workspace.runtime.ServerStatus.RUNNING;
 import static org.eclipse.che.api.workspace.shared.Constants.SERVER_WS_AGENT_HTTP_REFERENCE;
-import static org.eclipse.che.api.workspace.shared.Constants.WS_AGENT_TRACK_CONNECTION_HEARTBEAT;
-import static org.eclipse.che.api.workspace.shared.Constants.WS_AGENT_TRACK_CONNECTION_PERIOD;
-import static org.eclipse.che.api.workspace.shared.Constants.WS_AGENT_TRACK_CONNECTION_SUBSCRIBE;
-import static org.eclipse.che.api.workspace.shared.Constants.WS_AGENT_TRACK_CONNECTION_UNSUBSCRIBE;
 import static org.eclipse.che.ide.api.jsonrpc.Constants.WS_AGENT_JSON_RPC_ENDPOINT_ID;
 import static org.eclipse.che.ide.core.StandardComponentInitializer.STOP_WORKSPACE;
 import static org.eclipse.che.ide.util.browser.BrowserUtils.reloadPage;
+import static org.eclipse.che.wsagent.shared.Constants.WS_AGENT_TRACK_CONNECTION_HEARTBEAT;
+import static org.eclipse.che.wsagent.shared.Constants.WS_AGENT_TRACK_CONNECTION_PERIOD_MILLISECONDS;
+import static org.eclipse.che.wsagent.shared.Constants.WS_AGENT_TRACK_CONNECTION_SUBSCRIBE;
+import static org.eclipse.che.wsagent.shared.Constants.WS_AGENT_TRACK_CONNECTION_UNSUBSCRIBE;
 
 import com.google.gwt.user.client.Timer;
 import com.google.web.bindery.event.shared.EventBus;
-import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.eclipse.che.api.core.jsonrpc.commons.RequestHandlerConfigurator;
 import org.eclipse.che.api.core.jsonrpc.commons.RequestTransmitter;
-import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.ActionManager;
@@ -36,8 +34,8 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.api.workspace.event.WsAgentServerRunningEvent;
 import org.eclipse.che.ide.api.workspace.event.WsAgentServerStoppedEvent;
-import org.eclipse.che.ide.api.workspace.model.MachineImpl;
 import org.eclipse.che.ide.api.workspace.model.ServerImpl;
+import org.eclipse.che.ide.api.workspace.model.WorkspaceImpl;
 import org.eclipse.che.ide.bootstrap.BasicIDEInitializedEvent;
 import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 
@@ -51,7 +49,7 @@ import org.eclipse.che.ide.ui.dialogs.DialogFactory;
 @Singleton
 public class WsAgentWebSocketConnectionTracker {
   private static final int HEART_BEAT_PERIOD =
-      WS_AGENT_TRACK_CONNECTION_PERIOD + WS_AGENT_TRACK_CONNECTION_PERIOD / 2;
+      3 * WS_AGENT_TRACK_CONNECTION_PERIOD_MILLISECONDS + 1_000;
 
   private EventBus eventBus;
   private AppContext appContext;
@@ -59,8 +57,6 @@ public class WsAgentWebSocketConnectionTracker {
   private ActionManager actionManager;
   private RequestTransmitter requestTransmitter;
   private CoreLocalizationConstant localizationConstant;
-
-  private String devMachineName;
 
   private final Timer heartBeatTimer =
       new Timer() {
@@ -89,9 +85,13 @@ public class WsAgentWebSocketConnectionTracker {
     requestHandler
         .newConfiguration()
         .methodName(WS_AGENT_TRACK_CONNECTION_HEARTBEAT)
-        .noParams()
-        .noResult()
-        .withConsumer(s -> restartTimer());
+        .paramsAsBoolean()
+        .resultAsBoolean()
+        .withFunction(
+            aBoolean -> {
+              restartTimer();
+              return true;
+            });
 
     eventBus.addHandler(
         BasicIDEInitializedEvent.TYPE,
@@ -102,24 +102,30 @@ public class WsAgentWebSocketConnectionTracker {
                 .flatMap(machine -> machine.getServerByName(SERVER_WS_AGENT_HTTP_REFERENCE))
                 .map(ServerImpl::getStatus)
                 .filter(RUNNING::equals)
-                .ifPresent(it -> initialize()));
+                .ifPresent(
+                    it -> {
+                      subscribe();
+                      restartTimer();
+                    }));
 
-    eventBus.addHandler(WsAgentServerRunningEvent.TYPE, e -> initialize());
-    eventBus.addHandler(WsAgentServerStoppedEvent.TYPE, e -> unsubscribe());
-  }
-
-  private void initialize() {
-    Optional<MachineImpl> devMachine = appContext.getWorkspace().getDevMachine();
-    devMachineName = devMachine.isPresent() ? devMachine.get().getName() : "";
-
-    requestTransmitter
-        .newRequest()
-        .endpointId(WS_AGENT_JSON_RPC_ENDPOINT_ID)
-        .methodName(WS_AGENT_TRACK_CONNECTION_SUBSCRIBE)
-        .noParams()
-        .sendAndSkipResult();
-
-    restartTimer();
+    eventBus.addHandler(
+        WsAgentServerRunningEvent.TYPE,
+        e -> {
+          subscribe();
+          restartTimer();
+        });
+    eventBus.addHandler(
+        WsAgentServerStoppedEvent.TYPE,
+        e -> {
+          unsubscribe();
+          heartBeatTimer.cancel();
+        });
+    eventBus.addHandler(
+        WorkspaceStoppedEvent.TYPE,
+        e -> {
+          unsubscribe();
+          heartBeatTimer.cancel();
+        });
   }
 
   private void restartTimer() {
@@ -128,12 +134,14 @@ public class WsAgentWebSocketConnectionTracker {
   }
 
   private void onWsAgentConnectionIsLost() {
-    eventBus.fireEvent(new WsAgentServerStoppedEvent(devMachineName));
-
-    Workspace workspace = appContext.getWorkspace();
-    if (workspace == null || workspace.getStatus() != WorkspaceStatus.RUNNING) {
+    WorkspaceImpl workspace = appContext.getWorkspace();
+    if (workspace.getStatus() != WorkspaceStatus.RUNNING) {
       return;
     }
+
+    workspace
+        .getDevMachine()
+        .ifPresent(machine -> eventBus.fireEvent(new WsAgentServerStoppedEvent(machine.getName())));
 
     dialogFactory
         .createChoiceDialog(
@@ -147,6 +155,15 @@ public class WsAgentWebSocketConnectionTracker {
             },
             null)
         .show();
+  }
+
+  private void subscribe() {
+    requestTransmitter
+        .newRequest()
+        .endpointId(WS_AGENT_JSON_RPC_ENDPOINT_ID)
+        .methodName(WS_AGENT_TRACK_CONNECTION_SUBSCRIBE)
+        .noParams()
+        .sendAndSkipResult();
   }
 
   private void unsubscribe() {
