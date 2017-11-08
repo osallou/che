@@ -1,3 +1,0 @@
-1509704889000
-META-INF/context\.xml, WEB-INF/classes/org/eclipse/che/[^/]*?\.class, WEB-INF/rewrite\.config, WEB-INF/web\.xml, _app/IDE\.html, _app/browserNotSupported\.js, _app/favicon\.ico
-META-INF(?:$|/.+)

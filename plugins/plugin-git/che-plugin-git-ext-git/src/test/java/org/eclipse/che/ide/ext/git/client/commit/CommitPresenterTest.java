@@ -214,19 +214,6 @@ public class CommitPresenterTest extends BaseTest {
     verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
   }
 
-  //  @Test
-  //  public void shouldEnableCommitButton1() throws Exception {
-  //    when(view.getMessage()).thenReturn("foo");
-  //
-  //    presenter.showDialog(project);
-  //    verify(stringPromise).then(stringCaptor.capture());
-  //    stringCaptor.getValue().apply("M\tfile");
-  //    verify(logPromise).then(logCaptor.capture());
-  //    logCaptor.getValue().apply(null);
-  //
-  //    verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
-  //  }
-
   @Test
   public void shouldCloseWhenCancelButtonClicked() throws Exception {
     presenter.onCancelClicked();
@@ -238,7 +225,7 @@ public class CommitPresenterTest extends BaseTest {
   public void shouldDisableCommitButtonOnEmptyMessage() throws Exception {
     when(view.getMessage()).thenReturn(EMPTY_TEXT);
 
-    presenter.onSelectionChanged();
+    presenter.onValueChanged();
 
     verify(view).setEnableCommitButton(eq(DISABLE_BUTTON));
   }
@@ -248,7 +235,7 @@ public class CommitPresenterTest extends BaseTest {
     when(view.getMessage()).thenReturn(COMMIT_TEXT);
     when(view.isAmend()).thenReturn(true);
 
-    presenter.onSelectionChanged();
+    presenter.onValueChanged();
 
     verify(view).setEnableCommitButton(eq(ENABLE_BUTTON));
   }
