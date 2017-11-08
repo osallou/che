@@ -17,6 +17,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import org.eclipse.che.api.core.ValidationException;
 import org.eclipse.che.api.core.model.workspace.Warning;
+import org.eclipse.che.api.core.model.workspace.config.ServerConfig;
 import org.eclipse.che.api.installer.server.InstallerRegistry;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
 import org.eclipse.che.api.workspace.server.spi.InternalEnvironment;
@@ -26,7 +27,6 @@ import org.eclipse.che.api.workspace.server.spi.InternalRecipe;
 import org.eclipse.che.api.workspace.server.spi.RecipeRetriever;
 import org.eclipse.che.workspace.infrastructure.docker.container.ContainersStartStrategy;
 import org.eclipse.che.workspace.infrastructure.docker.environment.EnvironmentValidator;
-import org.eclipse.che.workspace.infrastructure.docker.environment.MachineNormalizer;
 import org.eclipse.che.workspace.infrastructure.docker.model.DockerBuildContext;
 import org.eclipse.che.workspace.infrastructure.docker.model.DockerContainerConfig;
 import org.eclipse.che.workspace.infrastructure.docker.model.DockerEnvironment;
@@ -82,12 +82,26 @@ public class DockerfileInternalEnvironmentFactory extends InternalEnvironmentFac
     }
 
     Map.Entry<String, InternalMachineConfig> entry = machines.entrySet().iterator().next();
+    String machineName = entry.getKey();
+    InternalMachineConfig machineConfig = entry.getValue();
 
     DockerEnvironment cheContainerEnv = new DockerEnvironment();
     DockerContainerConfig container = new DockerContainerConfig();
     cheContainerEnv.getContainers().put(entry.getKey(), container);
     container.setBuild(new DockerBuildContext().setDockerfileContent(recipe.getContent()));
-    MachineNormalizer.normalizeMachine(entry.getKey(), container, entry.getValue());
+
+    for (ServerConfig server : machineConfig.getServers().values()) {
+      container.addExpose(server.getPort());
+    }
+    if (machineConfig.getAttributes().containsKey("memoryLimitBytes")) {
+      try {
+        container.setMemLimit(
+            Long.parseLong(machineConfig.getAttributes().get("memoryLimitBytes")));
+      } catch (NumberFormatException e) {
+        throw new ValidationException(
+            format("Value of attribute 'memoryLimitBytes' of machine '%s' is illegal", machineName));
+      }
+    }
 
     return cheContainerEnv;
   }

@@ -66,6 +66,9 @@ public abstract class InternalEnvironmentFactory {
 
     InternalRecipe recipe = recipeRetriever.getRecipe(environment.getRecipe());
 
+    if(environment.getMachines().isEmpty())
+      throw new ValidationException("No machines defined");
+
     for (Map.Entry<String, ? extends MachineConfig> machineEntry :
         environment.getMachines().entrySet()) {
       MachineConfig machineConfig = machineEntry.getValue();
